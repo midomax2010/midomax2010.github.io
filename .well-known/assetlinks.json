@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.midomax2010.twa",
+      "sha256_cert_fingerprints": [
+        "FB:12:CC:6D:15:0F:3F:BF:FF:EE:B1:F5:A5:B9:FD:34:13:5F:85:63:67:61:1C:07:CA:28:9B:DB:5E:02:80:6C"
+      ]
+    }
+  }
+]
