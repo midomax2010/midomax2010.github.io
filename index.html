@@ -16,6 +16,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<!-- QR Code libs (Print + QR patches) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root{--safe-top:max(env(safe-area-inset-top,0px),24px);--safe-bottom:max(env(safe-area-inset-bottom,0px),0px)}
 *{box-sizing:border-box}html,body{overflow-x:hidden;max-width:100vw}html{scroll-padding-top:calc(64px + var(--safe-top))}body{margin:0;background:#f4f6fb;color:#171b23;font-family:'Tajawal',Tahoma,Arial,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(44px + env(safe-area-inset-bottom,0px));}
@@ -366,6 +369,51 @@ label{color:var(--dk-dim)}
 }
 </style>
 
+<!-- ============ 🖨️📱🧭 PRINT + QR + SMART ROUTE PATCHES CSS ============ -->
+<style id="printQrRouteStyle">
+/* ===== بطاقات الطباعة ===== */
+.printCardWrap{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid #e5eaf2;border-radius:14px;margin-bottom:10px;background:#fff;break-inside:avoid}
+.printCardWrap input[type="checkbox"]{width:20px;height:20px;flex-shrink:0;margin-top:4px}
+.printSticker{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px;border:2px dashed #cbd5e1;border-radius:16px;background:#fafbfc;flex:1;min-width:0}
+.printSticker .qrBox canvas,.printSticker .qrBox img{border-radius:10px;border:2px solid #e2e8f0}
+.printSticker .stickerInfo{width:100%;font-size:12.5px;line-height:1.9;color:#1e293b;text-align:center}
+.printSticker .stickerInfo b{font-size:15px;color:#0f172a}
+.printSticker .stickerId{font-size:10px;color:#94a3b8;letter-spacing:.5px}
+
+/* ===== وضع الطباعة ===== */
+@media print{
+  body *{visibility:hidden}
+  #printOrdersModal,#printOrdersModal *{visibility:visible}
+  #printOrdersModal{position:absolute;left:0;top:0;width:100%;margin:0;padding:0;background:#fff}
+  #printOrdersModal .sheet{box-shadow:none;border:0;max-width:none;padding:0;margin:0;background:#fff}
+  #printHeadNormal,#printControls{display:none!important}
+  .printCardWrap{border:none;margin:0;padding:8px;background:transparent;break-inside:avoid-page;page-break-inside:avoid}
+  .printCardWrap input{display:none}
+  .printSticker{border:2px dashed #94a3b8;background:#fff}
+  /* A6/A7 sticker sizing */
+  .printCardWrap{width:100mm;height:auto;margin-bottom:6mm}
+}
+
+/* ===== إحصائيات المندوب ===== */
+#driverPendingStats{background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fbbf24;border-radius:12px;padding:10px 14px;margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#driverPendingStats .stat{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#92400e}
+#driverPendingStats .stat b{font-size:18px;color:#78350f}
+
+/* ===== QR Code ===== */
+#qrViewBox canvas,#qrViewBox img{border-radius:12px;border:3px solid #e5eaf2;box-shadow:0 4px 16px #17203520}
+#qrScanBox video{width:100%!important;height:auto!important;border-radius:14px}
+
+/* ===== المسار الذكي ===== */
+#smartRouteList .sr-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #eef1f7;background:#fff;border-radius:12px;margin-bottom:6px;transition:transform .1s}
+#smartRouteList .sr-item:active{transform:scale(.99)}
+#smartRouteList .sr-num{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px #1d4ed833}
+#smartRouteList .sr-info{flex:1;font-size:13px;min-width:0}
+#smartRouteList .sr-info div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#smartRouteList .sr-dist{color:#8b93a3;font-size:11px;text-align:center;flex-shrink:0;min-width:60px}
+#smartRouteList .sr-dist b{color:#2563eb;font-size:13px}
+.leaflet-div-icon{background:transparent;border:none}
+</style>
+
 </head>
 <body>
 <div id="promoBanner" style="position:fixed;bottom:0;right:0;left:0;z-index:60;background:linear-gradient(135deg,#0f9d58,#0b7d43);color:#fff;padding:9px 12px calc(9px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-size:12.5px;font-weight:700;box-shadow:0 -2px 12px #0000002e">
@@ -411,8 +459,8 @@ label{color:var(--dk-dim)}
 <span>🔔 الإشعارات مش مفعّلة — ممكن تفوّتك تنبيهات مهمة</span>
 <button id="notifPermBannerBtn" type="button" style="border:0;border-radius:9px;padding:8px 12px;background:#7a5b00;color:#fff;font-weight:800;white-space:nowrap">تفعيل</button>
 </div>
-<div id="adminTools" class="adminTools hidden"><div id="moreToolsWrap" style="position:relative"><button id="moreToolsBtn" class="tool" type="button" style="padding:9px 14px;font-size:19px;line-height:1;font-weight:900">⋮</button><div id="moreToolsMenu" class="hidden" style="position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid #e1e7e4;border-radius:13px;box-shadow:0 8px 26px #00000022;overflow:hidden;z-index:6;min-width:230px;max-width:min(88vw,320px);max-height:70vh;overflow-y:auto;text-align:right"><button id="salesSummaryBtn" type="button" class="moreToolItem">📊 ملخص المبيعات</button><button id="returnsBtn" type="button" class="moreToolItem">🔄 المرتجعات</button><button id="excelBtn" type="button" class="moreToolItem">📥 استيراد Excel</button><button id="logBtn" type="button" class="moreToolItem">📋 السجل</button><button id="dashboardBtn" type="button" class="moreToolItem">📊 لوحة الأداء</button><button id="ndashBtn" type="button" class="moreToolItem">🖥️ لوحة التحكم الجديدة (Pro)</button><button id="dbDiagBtn" type="button" class="moreToolItem">🩺 تشخيص قاعدة البيانات</button><button id="driversBtn" type="button" class="moreToolItem">👥 المندوبين</button><button id="supervisorsBtn" type="button" class="moreToolItem">🛡️ المشرفين</button><button id="supervisorGroupsBtn" type="button" class="moreToolItem">👥 مجموعات المشرفين</button><button id="merchantsBtn" type="button" class="moreToolItem">🏪 التجار</button><button id="merchantSettlementsBtn" type="button" class="moreToolItem">🧾 تقفيل التجار</button><button id="regionsBtn" type="button" class="moreToolItem">🗺️ إدارة المناطق</button><button id="inventoryBtn" type="button" class="moreToolItem">📦 مخزون التجار</button><button id="productRequestsBtn" type="button" class="moreToolItem">🗂️ طلبات المخزون<span id="productRequestsBadge" class="hidden" style="margin-inline-start:6px;background:#d93025;color:#fff;font-size:10px;line-height:1;min-width:16px;height:16px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px">0</span></button><button id="assignAllBtn" type="button" class="moreToolItem">📦 توزيع الطلبات</button><button id="driversMapBtn" type="button" class="moreToolItem">🗺️ خريطة المندوبين والتجار</button><button id="driverTrackingBtn" type="button" class="moreToolItem">🚚 تتبع رحلة مندوب</button><button id="driverSalesBtn" type="button" class="moreToolItem">📈 مبيعات المندوبين</button><button id="presenceBtn" type="button" class="moreToolItem">🟢 الحضور (أونلاين/أوفلاين)</button><button id="dailySalesBtn" type="button" class="moreToolItem">📅 مبيعات يوم معين</button><button id="acctBtn" type="button" class="moreToolItem">🧮 التقرير المحاسبي</button><button id="ledgerBtn" type="button" class="moreToolItem">📒 دفتر الأستاذ</button><button id="moneyReportsBtn" type="button" class="moreToolItem">💰 حسابات وتقارير الشركة</button><button id="resetDataBtn" type="button" class="moreToolItem" style="color:#b22d2d">⚠️ تصفير البيانات</button></div></div></div>
-<div id="driverTools" class="adminTools hidden"><button id="deliveryLocationsBtn" class="tool" style="background:#e8f5ff;color:#1264a3">📍 أماكن التوصيل</button><button id="dailySummaryBtn" class="tool">📊 ملخص اليوم</button><button id="sosBtn" class="tool" style="background:#ffe7e7;color:#b22d2d">🆘 استغاثة</button><button id="overlayPermBtn" class="tool" style="background:#eef3fd;color:#1d4ed8">🔔 تفعيل تنبيه فوق الشاشة</button></div>
+<div id="adminTools" class="adminTools hidden"><button id="printOrdersBtn" class="tool" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff">🖨️ طباعة الطلبات</button><div id="moreToolsWrap" style="position:relative"><button id="moreToolsBtn" class="tool" type="button" style="padding:9px 14px;font-size:19px;line-height:1;font-weight:900">⋮</button><div id="moreToolsMenu" class="hidden" style="position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid #e1e7e4;border-radius:13px;box-shadow:0 8px 26px #00000022;overflow:hidden;z-index:6;min-width:230px;max-width:min(88vw,320px);max-height:70vh;overflow-y:auto;text-align:right"><button id="salesSummaryBtn" type="button" class="moreToolItem">📊 ملخص المبيعات</button><button id="returnsBtn" type="button" class="moreToolItem">🔄 المرتجعات</button><button id="excelBtn" type="button" class="moreToolItem">📥 استيراد Excel</button><button id="logBtn" type="button" class="moreToolItem">📋 السجل</button><button id="dashboardBtn" type="button" class="moreToolItem">📊 لوحة الأداء</button><button id="ndashBtn" type="button" class="moreToolItem">🖥️ لوحة التحكم الجديدة (Pro)</button><button id="dbDiagBtn" type="button" class="moreToolItem">🩺 تشخيص قاعدة البيانات</button><button id="driversBtn" type="button" class="moreToolItem">👥 المندوبين</button><button id="supervisorsBtn" type="button" class="moreToolItem">🛡️ المشرفين</button><button id="supervisorGroupsBtn" type="button" class="moreToolItem">👥 مجموعات المشرفين</button><button id="merchantsBtn" type="button" class="moreToolItem">🏪 التجار</button><button id="merchantSettlementsBtn" type="button" class="moreToolItem">🧾 تقفيل التجار</button><button id="regionsBtn" type="button" class="moreToolItem">🗺️ إدارة المناطق</button><button id="inventoryBtn" type="button" class="moreToolItem">📦 مخزون التجار</button><button id="productRequestsBtn" type="button" class="moreToolItem">🗂️ طلبات المخزون<span id="productRequestsBadge" class="hidden" style="margin-inline-start:6px;background:#d93025;color:#fff;font-size:10px;line-height:1;min-width:16px;height:16px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px">0</span></button><button id="assignAllBtn" type="button" class="moreToolItem">📦 توزيع الطلبات</button><button id="driversMapBtn" type="button" class="moreToolItem">🗺️ خريطة المندوبين والتجار</button><button id="driverTrackingBtn" type="button" class="moreToolItem">🚚 تتبع رحلة مندوب</button><button id="driverSalesBtn" type="button" class="moreToolItem">📈 مبيعات المندوبين</button><button id="presenceBtn" type="button" class="moreToolItem">🟢 الحضور (أونلاين/أوفلاين)</button><button id="dailySalesBtn" type="button" class="moreToolItem">📅 مبيعات يوم معين</button><button id="acctBtn" type="button" class="moreToolItem">🧮 التقرير المحاسبي</button><button id="ledgerBtn" type="button" class="moreToolItem">📒 دفتر الأستاذ</button><button id="moneyReportsBtn" type="button" class="moreToolItem">💰 حسابات وتقارير الشركة</button><button id="resetDataBtn" type="button" class="moreToolItem" style="color:#b22d2d">⚠️ تصفير البيانات</button></div></div></div>
+<div id="driverTools" class="adminTools hidden"><button id="deliveryLocationsBtn" class="tool" style="background:#e8f5ff;color:#1264a3">📍 أماكن التوصيل</button><button id="dailySummaryBtn" class="tool">📊 ملخص اليوم</button><button id="sosBtn" class="tool" style="background:#ffe7e7;color:#b22d2d">🆘 استغاثة</button><button id="overlayPermBtn" class="tool" style="background:#eef3fd;color:#1d4ed8">🔔 تفعيل تنبيه فوق الشاشة</button><button id="scanQrBtn" class="tool" style="background:linear-gradient(135deg,#059669,#047857);color:#fff">📷 مسح QR</button><button id="smartRouteBtn" class="tool" style="background:#e8f5ff;color:#1264a3">🧭 المسار الذكي</button></div>
 <div id="driverWelcomePanel" class="hidden" style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 3px 14px #17203514;border:1px solid #eef1f7;margin-bottom:12px">
 <p style="margin:0;font-weight:800;font-size:16px">أهلًا <span id="driverWelcomeName"></span> 👋</p>
 <p style="margin:6px 0 0;color:#66736d;font-size:13px" id="driverWelcomePhone"></p>
@@ -958,6 +1006,57 @@ label{color:var(--dk-dim)}
     <button id="gateLogoutBtn" type="button" style="border:0;background:transparent;color:#b32d2d;margin-top:14px;font-weight:700">خروج</button>
   </div>
 </div>
+
+<!-- ============ 🖨️ PRINT ORDERS MODAL ============ -->
+<div id="printOrdersModal" class="modal hidden"><div class="sheet" style="max-width:900px">
+<div class="sheethead" id="printHeadNormal">
+  <h2>🖨️ طباعة الطلبات</h2>
+  <button id="printOrdersClose" class="x">×</button>
+</div>
+<div id="printControls" style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+  <span style="font-size:13px;color:#5b6472;font-weight:700">اختر ما تريد طباعته:</span>
+  <button id="printSelectAll" class="tool" style="padding:6px 10px;font-size:12px">☑️ اختيار الكل</button>
+  <button id="printSelectNone" class="tool" style="padding:6px 10px;font-size:12px">⬜ إلغاء الكل</button>
+  <button id="printDoPrint" class="save" type="button" style="margin-inline-start:auto;background:linear-gradient(135deg,#7c3aed,#5b21b6)">🖨️ طباعة المُختار</button>
+</div>
+<div id="printOrdersList" style="margin:10px 0"></div>
+</div></div>
+
+<!-- ============ 📱 QR VIEW MODAL ============ -->
+<div id="qrViewModal" class="modal hidden"><div class="sheet" style="text-align:center">
+<div class="sheethead"><h2>📱 QR Code للطلب</h2><button id="qrViewClose" class="x">×</button></div>
+<div id="qrViewBox" style="display:flex;justify-content:center;padding:16px 0"></div>
+<p style="color:#5b6472;font-size:13px;font-weight:700;margin:0 0 8px">امسح الكود بالموبايل لفتح الطلب مباشرة</p>
+<div id="qrViewInfo" style="background:#f6f8fd;border-radius:12px;padding:12px;margin:8px 0;text-align:right;font-size:13px;line-height:2"></div>
+<button id="qrViewDownload" class="save" type="button">⬇️ تحميل الصورة</button>
+</div></div>
+
+<!-- ============ 📷 QR SCAN MODAL ============ -->
+<div id="qrScanModal" class="modal hidden"><div class="sheet">
+<div class="sheethead"><h2>📷 مسح QR Code</h2><button id="qrScanClose" class="x">×</button></div>
+<div id="qrScanBox" style="width:100%;border-radius:14px;overflow:hidden;margin:10px 0;min-height:300px;background:#000"></div>
+<div id="qrScanHint" style="text-align:center;color:#5b6472;font-size:13px;font-weight:700;padding:8px">وجّه الكاميرا نحو QR Code...</div>
+<button id="qrScanStopBtn" class="btn full" type="button" style="background:#ffe8e8;color:#b22e2e;margin-top:8px">🛑 إيقاف المسح</button>
+</div></div>
+
+<!-- ============ 🧭 SMART ROUTE MODAL ============ -->
+<div id="smartRouteModal" class="modal hidden"><div class="sheet">
+<div class="sheethead"><h2>🧭 المسار الذكي</h2><button id="smartRouteClose" class="x">×</button></div>
+<div id="smartRouteLoading" style="text-align:center;padding:40px 20px;color:#5b6472;font-weight:700">جارِ تحديد موقعك وترتيب الطلبات...</div>
+<div id="smartRouteContent" class="hidden">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+    <div class="card dashStat" style="padding:10px"><span class="small">📦 الطلبات</span><b id="srCount" style="font-size:20px">0</b></div>
+    <div class="card dashStat" style="padding:10px"><span class="small">📏 المسافة</span><b id="srDistance" style="font-size:20px">0</b><span class="small">كم</span></div>
+    <div class="card dashStat" style="padding:10px"><span class="small">⏱️ الوقت</span><b id="srTime" style="font-size:20px">0</b><span class="small">دقيقة</span></div>
+  </div>
+  <div id="smartRouteMap" class="mapCanvas" style="height:280px;margin-bottom:12px;border-radius:14px"></div>
+  <div id="smartRouteList" style="margin-bottom:12px;max-height:240px;overflow:auto"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <button id="smartRouteStartBtn" class="save" type="button">🗺️ فتح المسار على Google Maps</button>
+    <button id="smartRouteOsmBtn" class="btn full" type="button" style="background:#eaf1ff;color:#1d4ed8;font-weight:800">🗺️ فتح على OpenStreetMap</button>
+  </div>
+</div>
+</div></div>
 
 </div>
 <div id="toast" class="toast"></div>
@@ -2040,6 +2139,8 @@ function render(){
     ${(isAdmin()||supHas("driverLocation"))&&o.driver_lat!=null?`<button class="btn" onclick="openDriverLoc('${o.id}')">📍 موقع المندوب ${o.driver_loc_status==="ملغي"?"(رفض)":"(تسليم)"}</button>`:""}
     <button class="btn" onclick="openMap('${o.id}')">🗺️ الطريق</button>
     <button class="btn" onclick="sendInvoiceWA('${o.id}')">🧾 فاتورة</button>
+    <button class="btn" onclick="showOrderQR('${o.id}')">📱 QR</button>
+    <button class="btn" onclick="window.printOrderCard('${o.id}')">🖨️ طباعة</button>
     ${notesPhone?`<button class="btn" onclick="callNumber('${notesPhone}')">📞 اتصال برقم الملاحظات</button>`:""}
     ${extra}
     ${(isAdmin()||supHas("editOrder"))?`<button type="button" class="btn full" onclick="openPostpone('${o.id}')">📅 ترحيل لتاريخ آخر</button>`:""}
@@ -2353,9 +2454,12 @@ window.doAssign=async(orderId,driverId)=>{
   $("assignModal").classList.add("hidden");
   if(error){toast("تعذر التعيين: "+error.message);return}
   await recordOrderAction(orderId,"تعيين الطلب لمندوب","assign",`المندوب: ${d?d.name:"غير محدد"}`);
-  const o=orders.find(x=>x.id===orderId);
-  logAction("إسناد طلب لمندوب",(o?o.name:"")+" ← "+(d?d.name:""));
-  toast("تم إسناد الطلب");loadOrders();
+  const oBefore=orders.find(x=>x.id===orderId);
+  logAction("إسناد طلب لمندوب",(oBefore?oBefore.name:"")+" ← "+(d?d.name:""));
+  toast("تم إسناد الطلب");
+  await loadOrders();
+  const updated=orders.find(x=>x.id===orderId)||(oBefore?{...oBefore,driver_id:driverId,driver_name:d?d.name:null}:null);
+  if(updated&&typeof openPrintForOrders==="function")openPrintForOrders([updated]);
 };
 
 $("assignAllBtn").onclick=async()=>{
@@ -2367,13 +2471,19 @@ $("assignAllBtn").onclick=async()=>{
   }
   if(!unassigned.length){toast("لا توجد طلبات محتاجة توزيع"+(merchantFilterId?" لهذا التاجر":""));return}
   let n=0;
+  const assignedIds=[];
   for(const o of unassigned){
     const d=drivers[n%drivers.length];
     const{error}=await sb.from("orders").update({driver_id:d.id,driver_name:d.name,assigned_by:currentUser?currentUser.name:null,updated_at:new Date().toISOString()}).eq("id",o.id);
-    if(!error)n++;
+    if(!error){n++;assignedIds.push(o.id);}
   }
   logAction("توزيع تلقائي للطلبات",`${n} طلب`);
-  toast(`تم توزيع ${n} طلب`);loadOrders();
+  toast(`تم توزيع ${n} طلب`);
+  await loadOrders();
+  if(assignedIds.length&&typeof openPrintForOrders==="function"){
+    const printList=assignedIds.map(id=>orders.find(x=>x.id===id)).filter(Boolean);
+    openPrintForOrders(printList);
+  }
 };
 
 const STATUS_OPTIONS=["جديد","جاري التوصيل","تم التسليم","تسليم جزئي","رفض التسليم - دفع التوصيل","استبدال","ملغي"];
@@ -8054,6 +8164,367 @@ window.addEventListener('DOMContentLoaded',()=>{
   } catch(e){}
 })();
 
+</script>
+
+<!-- ============================================================
+   🖨️ PRINT SYSTEM + 🔧 FIX DELETE + 📊 DRIVER STATS
+   ============================================================ -->
+<script>
+let printOrderIds=new Set();
+
+function getShortId(id){return id?String(id).slice(-8).toUpperCase():"—";}
+
+function buildPrintCard(o,checked){
+  const wrap=document.createElement("div");wrap.className="printCardWrap";
+  const cb=document.createElement("input");cb.type="checkbox";cb.checked=checked;cb.dataset.id=o.id;
+  cb.onchange=()=>{if(cb.checked)printOrderIds.add(o.id);else printOrderIds.delete(o.id);};
+  const sticker=document.createElement("div");sticker.className="printSticker";
+  const qrDiv=document.createElement("div");qrDiv.className="qrBox";
+  const payload=JSON.stringify({id:o.id,phone:o.phone||"",name:o.name||"",driver:o.driver_name||""});
+  new QRCode(qrDiv,{text:payload,width:140,height:140,colorDark:"#0f172a",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+  const info=document.createElement("div");info.className="stickerInfo";
+  info.innerHTML=`<div class="stickerId">#${getShortId(o.id)}</div><b>${esc(o.name)}</b><div>📞 ${esc(o.phone||"—")}</div><div>📍 ${esc(o.address||"—")}</div>${o.region?`<div>🗺️ ${esc(o.region)}</div>`:""}<div>💰 ${Number(o.amount||0).toLocaleString("ar-EG")} ج.م</div>${o.product?`<div>📦 ${esc(o.product)}</div>`:""}${o.sender_name?`<div>🏪 ${esc(o.sender_name)}</div>`:""}${o.driver_name?`<div style="font-weight:800;color:#5b21b6">🛵 المندوب: ${esc(o.driver_name)}</div>`:""}<div>🚚 ${esc(o.status)}</div>`;
+  sticker.appendChild(qrDiv);sticker.appendChild(info);
+  wrap.appendChild(cb);wrap.appendChild(sticker);
+  return wrap;
+}
+
+function renderPrintList(){
+  const box=$("printOrdersList");box.innerHTML="";
+  let list=orders;
+  if(isMerchant()){
+    const names=[currentUser.name,currentUser.username].filter(Boolean);
+    list=orders.filter(o=>o.merchant_id===currentUser.id||names.includes(o.sender_name));
+  }else if(currentUser.role==="driver"){
+    list=orders.filter(o=>o.driver_id===currentUser.id);
+  }else if(isSupervisor()){
+    const groupIds=currentSupervisorGroupIds.length?currentSupervisorGroupIds:[];
+    if(!supervisorCanSeeAllData()&&groupIds.length)list=list.filter(o=>groupIds.includes(o.supervisor_group_id));
+  }
+  // نعرض الطلبات النشطة فقط (جديد + جاري التوصيل) للطباعة، أو كلها لو الأدمن اختار
+  const printList=list.filter(o=>o.status==="جديد"||o.status==="جاري التوصيل").slice(0,60);
+  if(!printList.length){box.innerHTML="<div class='empty'>لا توجد طلبات نشطة للطباعة</div>";return;}
+  printList.forEach(o=>{
+    const card=buildPrintCard(o,printOrderIds.has(o.id));
+    box.appendChild(card);
+  });
+}
+
+$("printOrdersBtn").onclick=()=>{renderPrintList();$("printOrdersModal").classList.remove("hidden");};
+
+/* ——— فتح مودال الطباعة تلقائيًا لطلبات محددة (تُستخدم بعد التعيين) ——— */
+function renderPrintCardsFor(list){
+  const box=$("printOrdersList");box.innerHTML="";
+  if(!list.length){box.innerHTML="<div class='empty'>لا توجد طلبات لعرضها</div>";return;}
+  list.forEach(o=>{
+    const card=buildPrintCard(o,true);
+    box.appendChild(card);
+  });
+}
+function openPrintForOrders(list){
+  if(!list||!list.length)return;
+  printOrderIds=new Set(list.map(o=>o.id));
+  renderPrintCardsFor(list);
+  $("printOrdersModal").classList.remove("hidden");
+}
+window.openPrintForOrders=openPrintForOrders;
+
+$("printOrdersClose").onclick=()=>$("printOrdersModal").classList.add("hidden");
+$("printSelectAll").onclick=()=>{document.querySelectorAll(".printCardWrap input[type=checkbox]").forEach(cb=>{cb.checked=true;printOrderIds.add(cb.dataset.id);});};
+$("printSelectNone").onclick=()=>{document.querySelectorAll(".printCardWrap input[type=checkbox]").forEach(cb=>{cb.checked=false;printOrderIds.delete(cb.dataset.id);});};
+$("printDoPrint").onclick=()=>{
+  const checked=document.querySelectorAll(".printCardWrap input[type=checkbox]:checked");
+  if(!checked.length){toast("اختار طلبًا واحدًا على الأقل للطباعة");return;}
+  // نخفي غير المختار قبل الطباعة
+  document.querySelectorAll(".printCardWrap").forEach(w=>{
+    const cb=w.querySelector("input[type=checkbox]");
+    w.style.display=cb&&cb.checked?"":"none";
+  });
+  setTimeout(()=>window.print(),300);
+  // بعد الطباعة نرجع نعرض الكل
+  setTimeout(()=>{document.querySelectorAll(".printCardWrap").forEach(w=>w.style.display="");},1000);
+};
+
+/* ============================================================
+   🔧 FIX DELETE — إصلاح دالة الحذف
+   ============================================================ */
+window.removeOrder=async id=>{
+  if(!confirm("متأكد من حذف الطلب؟"))return;
+  const o=orders.find(x=>x.id===id);
+  try{
+    // نحذف بدون .select() لأن RLS قد تمنع SELECT بعد DELETE
+    const{error}=await sb.from("orders").delete().eq("id",id);
+    if(error){
+      // لو فشل الحذف، نحاول نفهم السبب
+      if(error.message&&error.message.includes("row-level")){
+        toast("❌ الحذف مرفوض: صلاحيات RLS تمنع حذف هذا الطلب. تأكد من إعدادات Supabase → Authentication → Policies.");
+      }else{
+        toast("❌ تعذر الحذف: "+error.message);
+      }
+      return;
+    }
+    // نتحقق يدوياً إن الطلب اتمسح فعلاً
+    const{data:check,error:checkErr}=await sb.from("orders").select("id").eq("id",id).maybeSingle();
+    if(!checkErr&&check){
+      toast("⚠️ تم تنفيذ الحذف لكن الطلب لا يزال موجودًا — تحقق من صلاحيات RLS في Supabase.");
+      return;
+    }
+    if(o)logAction("حذف طلب",o.name);
+    toast("✅ تم الحذف بنجاح");
+    loadOrders();
+  }catch(e){
+    toast("❌ خطأ فني أثناء الحذف: "+(e&&e.message?e.message:String(e)));
+  }
+};
+
+/* ============================================================
+   📊 DRIVER PENDING STATS — إحصائيات المندوب المعلقة
+   ============================================================ */
+function renderDriverPendingStats(){
+  if(currentUser.role!=="driver")return;
+  const myOrders=orders.filter(o=>o.driver_id===currentUser.id);
+  const pending=myOrders.filter(o=>o.status==="جديد"||o.status==="جاري التوصيل");
+  const pendingCount=pending.length;
+  const pendingValue=pending.reduce((s,o)=>s+(Number(o.amount)||0),0);
+  const todayOrders=myOrders.filter(o=>(o.work_date||"").startsWith(todayStr()));
+  const todayDone=todayOrders.filter(o=>isCollectedStatus(o.status)).length;
+  const todayValue=todayOrders.filter(o=>isCollectedStatus(o.status)).reduce((s,o)=>s+collectedAmount(o),0);
+
+  let box=$("driverPendingStats");
+  if(!box){
+    box=document.createElement("div");box.id="driverPendingStats";
+    const panel=$("driverWelcomePanel");
+    if(panel)panel.appendChild(box);
+  }
+  box.innerHTML=`<div class="stat">📦 معلقة: <b>${pendingCount}</b></div><div class="stat">💰 إجمالي: <b>${Number(pendingValue).toLocaleString("ar-EG")}</b> ج.م</div><div class="stat">✅ اليوم: <b>${todayDone}</b></div><div class="stat">💵 محصل: <b>${Number(todayValue).toLocaleString("ar-EG")}</b> ج.م</div>`;
+}
+
+// نستدعيها بعد كل render
+const _origRender=render;
+render=function(){
+  _origRender.apply(this,arguments);
+  renderDriverPendingStats();
+};
+
+// نستدعيها بعد loadOrders
+const _origLoadOrders=loadOrders;
+loadOrders=async function(){
+  await _origLoadOrders.apply(this,arguments);
+  renderDriverPendingStats();
+};
+
+// طباعة بطاقة فردية مباشرة
+window.printOrderCard=id=>{
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  printOrderIds=new Set([id]);
+  renderPrintList();
+  $("printOrdersModal").classList.remove("hidden");
+  setTimeout(()=>{
+    document.querySelectorAll(".printCardWrap").forEach(w=>{
+      const cb=w.querySelector("input[type=checkbox]");
+      w.style.display=cb&&cb.checked?"":"none";
+    });
+    window.print();
+    setTimeout(()=>{document.querySelectorAll(".printCardWrap").forEach(w=>w.style.display="");},800);
+  },400);
+};
+</script>
+
+<!-- ============================================================
+   📱 QR CODE PATCH — استخراج QR + مسح QR بالكاميرا
+   ============================================================ -->
+<script>
+let qrObj=null,html5QrScanner=null;
+
+/* ——— عرض QR Code للطلب ——— */
+window.showOrderQR=id=>{
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  $("qrViewModal").classList.remove("hidden");
+  $("qrViewBox").innerHTML="";
+  const payload=JSON.stringify({id:o.id,phone:o.phone||"",name:o.name||"",driver:o.driver_name||""});
+  qrObj=new QRCode($("qrViewBox"),{text:payload,width:220,height:220,colorDark:"#171b23",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+  $("qrViewInfo").innerHTML=`<div><b>👤 ${esc(o.name)}</b></div><div>📞 ${esc(o.phone||"—")}</div><div>📍 ${esc(o.address||"—")}</div><div>💰 ${Number(o.amount||0).toLocaleString("ar-EG")} ج.م</div>${o.driver_name?`<div style="font-weight:800;color:#5b21b6">🛵 المندوب: ${esc(o.driver_name)}</div>`:""}<div style="color:#8b93a3;font-size:11px;margin-top:4px">🆔 ${esc(o.id)}</div>`;
+  // ننتظر قليلاً لحد ما الرسم يخلص عشان نقدر نحمله
+  setTimeout(()=>{
+    const img=$("qrViewBox").querySelector("img");
+    if(img)img.id="qrGeneratedImg";
+  },300);
+};
+$("qrViewClose").onclick=()=>{$("qrViewModal").classList.add("hidden");if(qrObj){qrObj.clear();qrObj=null;}};
+$("qrViewDownload").onclick=()=>{
+  const img=$("qrViewBox").querySelector("img");
+  if(!img){toast("جارِ تجهيز الصورة... حاول مرة أخرى");return;}
+  const a=document.createElement("a");a.href=img.src;a.download="qr-order.png";a.click();
+};
+
+/* ——— مسح QR Code بالكاميرا ——— */
+$("scanQrBtn").onclick=()=>{startQRScanner();$("qrScanModal").classList.remove("hidden");};
+$("qrScanClose").onclick=stopQRScanner;
+$("qrScanStopBtn").onclick=stopQRScanner;
+
+function startQRScanner(){
+  $("qrScanHint").textContent="وجّه الكاميرا نحو QR Code...";
+  $("qrScanHint").style.color="#5b6472";
+  if(html5QrScanner){html5QrScanner.stop().catch(()=>{});html5QrScanner=null;}
+  html5QrScanner=new Html5Qrcode("qrScanBox");
+  html5QrScanner.start(
+    {facingMode:"environment"},
+    {fps:10,qrbox:{width:250,height:250}},
+    decodedText=>{
+      try{
+        const data=JSON.parse(decodedText);
+        if(data&&data.id){
+          html5QrScanner.stop().then(()=>{html5QrScanner=null;$("qrScanModal").classList.add("hidden");openScannedOrder(data.id);}).catch(()=>{});
+        }
+      }catch(e){/* لو مش JSON، نحاول نستخدم النص كـ ID مباشرة */
+        const id=String(decodedText).trim();
+        if(id.length>5&&id.includes("-")){
+          html5QrScanner.stop().then(()=>{html5QrScanner=null;$("qrScanModal").classList.add("hidden");openScannedOrder(id);}).catch(()=>{});
+        }
+      }
+    },
+    ()=>{} /* onScanFailure: نتجاهل الإطارات الفاشلة silently */
+  ).catch(err=>{
+    $("qrScanHint").textContent="❌ تعذر تشغيل الكاميرا: "+err;
+    $("qrScanHint").style.color="#b22e2e";
+  });
+}
+
+function stopQRScanner(){
+  if(html5QrScanner){html5QrScanner.stop().then(()=>{html5QrScanner=null;$("qrScanModal").classList.add("hidden");}).catch(()=>{html5QrScanner=null;$("qrScanModal").classList.add("hidden");});}
+  else{$("qrScanModal").classList.add("hidden");}
+}
+
+function openScannedOrder(id){
+  const o=orders.find(x=>x.id===id);
+  if(!o){toast("❌ الطلب غير موجود في قائمتك الحالية — ربّما يخص مندوب تاني أو تم حذفه");return;}
+  // نفتح الطلب في صفحة التفاصيل أو نعرض toast مع زرار فتح
+  toast(`✅ تم العثور على الطلب: ${o.name}`);
+  // نبحث عن البطاقة ونمرّر ليها
+  const cards=document.querySelectorAll(".card");
+  for(const card of cards){
+    if(card.innerHTML.includes(id)){
+      card.scrollIntoView({behavior:"smooth",block:"center"});
+      card.style.boxShadow="0 0 0 3px #2563eb,0 6px 20px #00000030";
+      setTimeout(()=>card.style.boxShadow="",2500);
+      break;
+    }
+  }
+  // لو المندوب، نفتح له status picker أو نعرضله أزرار التحديث
+  if(currentUser&&currentUser.role==="driver"){
+    if(o.status==="جديد"||o.status==="جاري التوصيل"){
+      if(confirm(`تحديث حالة الطلب: ${o.name}؟\nالحالة الحالية: ${o.status}\n\nاضغط "موافق" لتحديثها لـ "تم التسليم"`)){
+        driverDone(o.id);
+      }
+    }
+  }
+}
+</script>
+
+<!-- ============================================================
+   🧭 SMART ROUTE PATCH — المسار الذكي
+   ============================================================ -->
+<script>
+let srMap=null,srMarkers=[],srRouteLine=null,srSortedOrders=[],srDriverPos=null;
+
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function nearestNeighborRoute(startLat,startLng,points){
+  const unvisited=points.map((p,i)=>({...p,origIndex:i}));
+  const route=[];let current={lat:startLat,lng:startLng};
+  while(unvisited.length){
+    let nearestIdx=0,nearestDist=Infinity;
+    for(let i=0;i<unvisited.length;i++){
+      const d=haversine(current.lat,current.lng,unvisited[i].lat,unvisited[i].lng);
+      if(d<nearestDist){nearestDist=d;nearestIdx=i;}
+    }
+    const next=unvisited.splice(nearestIdx,1)[0];
+    route.push({...next,distFromPrev:nearestDist});
+    current={lat:next.lat,lng:next.lng};
+  }
+  return route;
+}
+
+async function openSmartRoute(){
+  $("smartRouteModal").classList.remove("hidden");
+  $("smartRouteLoading").classList.remove("hidden");
+  $("smartRouteContent").classList.add("hidden");
+  if(!navigator.geolocation){$("smartRouteLoading").innerHTML="❌ الجهاز لا يدعم GPS";return;}
+  navigator.geolocation.getCurrentPosition(pos=>buildSmartRoute(pos.coords.latitude,pos.coords.longitude),
+    err=>{$("smartRouteLoading").innerHTML="❌ تعذر تحديد الموقع — فعّل GPS من الإعدادات";},
+    {enableHighAccuracy:true,timeout:12000,maximumAge:10000});
+}
+
+async function buildSmartRoute(myLat,myLng){
+  srDriverPos={lat:myLat,lng:myLng};
+  const activeOrders=orders.filter(o=>o.driver_id===currentUser.id&&(o.status==="جديد"||o.status==="جاري التوصيل")&&o.client_lat!=null&&o.client_lng!=null);
+  if(!activeOrders.length){$("smartRouteLoading").innerHTML="📭 لا توجد طلبات نشطة بمواقع محددة لهذا اليوم";return;}
+  const points=activeOrders.map(o=>({id:o.id,lat:o.client_lat,lng:o.client_lng,name:o.name,phone:o.phone||"",address:o.address||"",amount:o.amount||0,status:o.status,product:o.product||""}));
+  const route=nearestNeighborRoute(myLat,myLng,points);
+  srSortedOrders=route;
+  let totalDist=0;
+  route.forEach((p,i)=>{totalDist+=i===0?haversine(myLat,myLng,p.lat,p.lng):haversine(route[i-1].lat,route[i-1].lng,p.lat,p.lng);});
+  $("srCount").textContent=route.length;
+  $("srDistance").textContent=totalDist.toFixed(1);
+  $("srTime").textContent=Math.max(1,Math.ceil(totalDist*2.5+route.length*5));
+  renderSmartRouteMap(myLat,myLng,route);
+  $("smartRouteList").innerHTML=route.map((p,i)=>{
+    const distLabel=i===0?"من موقعك":"من السابق";
+    const distVal=(p.distFromPrev||0).toFixed(1);
+    const statusIcon=p.status==="جديد"?"🆕":"🚚";
+    return `<div class="sr-item" onclick="openMap('${esc(p.id)}')" style="cursor:pointer">
+      <div class="sr-num">${i+1}</div>
+      <div class="sr-info">
+        <div style="font-weight:800">${esc(p.name)}</div>
+        <div style="color:#69736e">${esc(p.address||"بدون عنوان")}</div>
+        <div style="color:#2563eb;font-size:11px;margin-top:3px">${statusIcon} ${esc(p.status)} • 💰 ${Number(p.amount).toLocaleString("ar-EG")} ج.م${p.product?` • 📦 ${esc(p.product)}`:""}</div>
+      </div>
+      <div class="sr-dist">${distLabel}<br><b>${distVal} كم</b></div>
+    </div>`;
+  }).join("");
+  $("smartRouteLoading").classList.add("hidden");
+  $("smartRouteContent").classList.remove("hidden");
+}
+
+function renderSmartRouteMap(myLat,myLng,route){
+  if(!srMap){srMap=L.map("smartRouteMap").setView([myLat,myLng],13);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(srMap);}
+  else{srMap.setView([myLat,myLng],13);}
+  srMarkers.forEach(m=>srMap.removeLayer(m));srMarkers=[];
+  if(srRouteLine){srMap.removeLayer(srRouteLine);srRouteLine=null;}
+  const driverIcon=L.divIcon({className:"leaflet-div-icon",html:'<div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;border:3px solid #fff;box-shadow:0 3px 10px #0004">🛵</div>',iconSize:[34,34],iconAnchor:[17,17]});
+  srMarkers.push(L.marker([myLat,myLng],{icon:driverIcon}).addTo(srMap).bindPopup("موقعك الحالي"));
+  route.forEach((p,i)=>{
+    const numIcon=L.divIcon({className:"leaflet-div-icon",html:`<div style="background:#fff;color:#1d4ed8;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;border:2px solid #1d4ed8;box-shadow:0 2px 6px #0003">${i+1}</div>`,iconSize:[28,28],iconAnchor:[14,14]});
+    srMarkers.push(L.marker([p.lat,p.lng],{icon:numIcon}).addTo(srMap).bindPopup(`<b>${i+1}. ${esc(p.name)}</b><br>${esc(p.address||"")}<br>📞 ${esc(p.phone||"")}`));
+  });
+  const latlngs=[[myLat,myLng],...route.map(p=>[p.lat,p.lng])];
+  srRouteLine=L.polyline(latlngs,{color:"#2563eb",weight:5,opacity:.85,dashArray:"10,8",lineCap:"round"}).addTo(srMap);
+  if(srMarkers.length>1){const g=L.featureGroup(srMarkers);srMap.fitBounds(g.getBounds().pad(.18));}
+}
+
+$("smartRouteClose").onclick=()=>$("smartRouteModal").classList.add("hidden");
+
+$("smartRouteStartBtn").onclick=()=>{
+  if(!srSortedOrders.length)return;
+  const origin=`${srDriverPos.lat},${srDriverPos.lng}`;
+  const dest=`${srSortedOrders[srSortedOrders.length-1].lat},${srSortedOrders[srSortedOrders.length-1].lng}`;
+  const waypoints=srSortedOrders.slice(0,Math.min(srSortedOrders.length-1,8)).map(p=>`${p.lat},${p.lng}`).join("|");
+  const url=`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&waypoints=${waypoints}&travelmode=driving`;
+  window.open(url,"_blank");
+};
+
+$("smartRouteOsmBtn").onclick=()=>{
+  if(!srSortedOrders.length||!srDriverPos)return;
+  const pts=[[srDriverPos.lat,srDriverPos.lng],...srSortedOrders.map(p=>[p.lat,p.lng])];
+  const latlngs=pts.map(c=>`${c[0]},${c[1]}`).join(";");
+  window.open(`https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${latlngs}`,"_blank");
+};
+
+$("smartRouteBtn").onclick=openSmartRoute;
 </script>
 </body>
 </html>
